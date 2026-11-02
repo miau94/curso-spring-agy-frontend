@@ -16,18 +16,18 @@ export const UserTable: React.FC<UserTableProps> = ({
   onDelete,
 }) => {
   return (
-    <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
+    <div className="rounded-2xl bg-white dark:bg-[#0F1623] border border-slate-200/85 dark:border-slate-800/90 shadow-xs overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              <th className="py-3.5 px-5">ID</th>
-              <th className="py-3.5 px-4">Correo Electrónico</th>
-              <th className="py-3.5 px-4">Rol Asignado</th>
+            <tr className="border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <th className="py-3.5 px-5">Identificador</th>
+              <th className="py-3.5 px-4">Correo electrónico</th>
+              <th className="py-3.5 px-4">Nivel de acceso</th>
               <th className="py-3.5 px-5 text-right">Acciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/70 text-sm">
             {users.map((u) => (
               <UserTableRow
                 key={u.id}

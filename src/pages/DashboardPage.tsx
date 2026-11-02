@@ -1,6 +1,5 @@
 import {
   Activity,
-  ArrowRight,
   CheckCircle2,
   Lock,
   RefreshCw,
@@ -68,125 +67,129 @@ export const DashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 p-6 sm:p-8 text-white shadow-lg shadow-indigo-600/15">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-xs text-xs font-semibold mb-3">
-              <span>Panel de Control Full-Stack</span>
-              <span>•</span>
-              <span>Spring Boot 4.1 + React 19 + Zustand + Zod</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              ¡Hola, {user?.email.split('@')[0]}!
-            </h1>
-            <p className="text-sm text-indigo-100 mt-1 max-w-xl">
-              Has iniciado sesión con rol <strong>{user?.role}</strong>.{' '}
-              {isAdmin
-                ? 'Tienes permisos de lectura y escritura completos sobre Clientes y Usuarios.'
-                : 'Tienes acceso de lectura al directorio de Clientes (/api/customers).'}
-            </p>
+    <div className="space-y-6">
+      {/* Cabecera Operativa */}
+      <div className="rounded-2xl bg-white dark:bg-[#0F1623] border border-slate-200/85 dark:border-slate-800/90 p-6 sm:p-7 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div>
+          <div className="flex flex-wrap items-center gap-2.5 mb-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              Sesión iniciada como {user?.email}
+            </span>
+            {user ? <RoleBadge role={user.role} /> : null}
           </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Panel de operaciones
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
+            {isAdmin
+              ? 'Tienes control total para registrar, editar y eliminar clientes o administrar las cuentas de usuario del sistema.'
+              : 'Estás en modo de consulta. Puedes explorar el directorio completo de clientes y ver sus fichas detalladas.'}
+          </p>
+        </div>
 
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <Link
+            to="/customers"
+            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm shadow-indigo-600/20 transition-colors"
+          >
+            Abrir directorio de clientes
+          </Link>
           <button
             onClick={() => void handleManualRefresh()}
             disabled={refreshing}
-            className="self-start sm:self-center inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-semibold backdrop-blur-xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60"
           >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>Actualizar métricas</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            <span>Sincronizar datos</span>
           </button>
         </div>
       </div>
 
-      {/* Stat Cards Grid */}
+      {/* Tarjetas de métricas con números tabulares */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Total Clientes"
-          icon={<Users className="w-5 h-5" />}
-          iconContainerClass="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+          title="Clientes en el directorio"
+          icon={<Users className="w-4 h-4" />}
+          iconContainerClass="bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400"
         >
-          <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">
-            {loadingCustomers ? '...' : customers.length}
+          <p className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white tabular-nums">
+            {loadingCustomers ? '—' : customers.length}
           </p>
           <Link
             to="/customers"
-            className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+            className="mt-2 inline-block text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
           >
-            <span>Ir a Clientes</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            Gestionar clientes
           </Link>
         </StatCard>
 
         <StatCard
-          title="Usuarios del Sistema"
-          icon={<Shield className="w-5 h-5" />}
-          iconContainerClass="bg-violet-500/10 text-violet-600 dark:text-violet-400"
+          title="Cuentas de usuario"
+          icon={<Shield className="w-4 h-4" />}
+          iconContainerClass="bg-violet-50 dark:bg-violet-500/15 text-violet-600 dark:text-violet-400"
         >
           {isAdmin ? (
             <>
-              <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">
-                {refreshing ? '...' : users.length}
+              <p className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white tabular-nums">
+                {refreshing ? '—' : users.length}
               </p>
               <Link
                 to="/users"
-                className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                className="mt-2 inline-block text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
               >
-                <span>Administrar Usuarios</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                Administrar accesos
               </Link>
             </>
           ) : (
             <>
-              <p className="text-sm font-bold text-amber-600 dark:text-amber-400 mt-2.5 flex items-center gap-1.5">
-                <Lock className="w-4 h-4" />
-                Solo Rol ADMIN
+              <p className="text-sm font-bold text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5" />
+                Restringido a Admin
               </p>
               <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                Endpoint protegido <code className="text-[11px]">/api/users</code>
+                Requiere rol Administrador
               </p>
             </>
           )}
         </StatCard>
 
         <StatCard
-          title="Rol de Sesión Activa"
-          icon={<CheckCircle2 className="w-5 h-5" />}
-          iconContainerClass="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+          title="Nivel de autorización"
+          icon={<CheckCircle2 className="w-4 h-4" />}
+          iconContainerClass="bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
         >
-          <div className="mt-2.5">{user && <RoleBadge role={user.role} size="md" />}</div>
-          <p className="mt-3 text-xs text-slate-500 dark:text-slate-400 truncate max-w-[180px]">
-            {user?.email}
+          <div className="mt-1">{user ? <RoleBadge role={user.role} size="md" /> : null}</div>
+          <p className="mt-2.5 text-xs text-slate-500 dark:text-slate-400 truncate">
+            {isAdmin ? 'Lectura y escritura habilitadas' : 'Acceso en modo lectura'}
           </p>
         </StatCard>
 
         <StatCard
-          title="Estado Backend API"
-          icon={<Activity className="w-5 h-5" />}
-          iconContainerClass="bg-sky-500/10 text-sky-600 dark:text-sky-400"
+          title="Salud del servicio Spring"
+          icon={<Activity className="w-4 h-4" />}
+          iconContainerClass="bg-sky-50 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400"
         >
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-1 flex items-center gap-2">
             <span
               className={`w-2.5 h-2.5 rounded-full ${
                 healthStatus === 'UP'
-                  ? 'bg-emerald-500 animate-pulse'
+                  ? 'bg-emerald-500'
                   : healthStatus === 'LOADING'
                     ? 'bg-amber-400'
                     : 'bg-rose-500'
               }`}
             />
-            <span className="text-xl font-extrabold text-slate-900 dark:text-white">
-              {healthStatus === 'LOADING' ? 'Verificando...' : healthStatus}
+            <span className="text-xl font-extrabold text-slate-900 dark:text-white font-mono">
+              {healthStatus === 'LOADING' ? '...' : healthStatus}
             </span>
           </div>
-          <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-            <code className="text-[11px]">GET /actuator/health</code>
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-mono">
+            GET /actuator/health
           </p>
         </StatCard>
       </div>
 
-      {/* Recent Customers & RBAC Matrix */}
+      {/* Directorio Reciente y Matriz RBAC */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <RecentCustomersList customers={customers} loading={loadingCustomers} />
         <RbacMatrixCard isAdmin={isAdmin} />
