@@ -1,10 +1,11 @@
-import { Lock, ShieldAlert, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Lock, ShieldAlert } from 'lucide-react';
 import React from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export const AdminRoute: React.FC = () => {
-  const { isAdmin, user } = useAuth();
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.role === 'ADMIN';
 
   if (!isAdmin) {
     return (
@@ -16,11 +17,17 @@ export const AdminRoute: React.FC = () => {
           Acceso restringido a Administradores
         </h2>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
-          Tu cuenta actual (<span className="font-semibold text-slate-800 dark:text-slate-200">{user?.email}</span>) tiene el rol{' '}
+          Tu cuenta actual (
+          <span className="font-semibold text-slate-800 dark:text-slate-200">{user?.email}</span>)
+          tiene el rol{' '}
           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
             {user?.role}
           </span>
-          . El módulo de Gestión de Usuarios (<code className="text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">/api/users</code>) requiere rol{' '}
+          . El módulo de Gestión de Usuarios (
+          <code className="text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
+            /api/users
+          </code>
+          ) requiere rol{' '}
           <span className="font-semibold text-indigo-600 dark:text-indigo-400">ADMIN</span>.
         </p>
         <div className="flex items-center justify-center gap-3">
