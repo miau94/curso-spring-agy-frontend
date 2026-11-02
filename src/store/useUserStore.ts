@@ -16,6 +16,9 @@ interface UserState {
   deleteUser: (id: number) => Promise<void>;
 }
 
+// Deduplicación de peticiones concurrentes (client-swr-dedup)
+let inflightUsersPromise: Promise<UserDto[]> | null = null;
+
 export const useUserStore = create<UserState>((set) => ({
   users: [],
   loading: false,
@@ -26,14 +29,23 @@ export const useUserStore = create<UserState>((set) => ({
   setRoleFilter: (roleFilter) => set({ roleFilter }),
 
   fetchUsers: async () => {
-    set({ loading: true });
-    try {
-      const data = await userService.getAll();
-      set({ users: data });
-      return data;
-    } finally {
-      set({ loading: false });
+    if (inflightUsersPromise) {
+      return inflightUsersPromise;
     }
+
+    set({ loading: true });
+    inflightUsersPromise = userService
+      .getAll()
+      .then((data) => {
+        set({ users: data });
+        return data;
+      })
+      .finally(() => {
+        inflightUsersPromise = null;
+        set({ loading: false });
+      });
+
+    return inflightUsersPromise;
   },
 
   createUser: async (payload) => {

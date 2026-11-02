@@ -12,7 +12,6 @@ import { DemoAccessButtons } from './DemoAccessButtons';
 
 export const LoginForm: React.FC = () => {
   const login = useAuthStore((s) => s.login);
-  const toast = useToastStore();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -37,10 +36,13 @@ export const LoginForm: React.FC = () => {
     try {
       // 2. Petición al Backend (también validada con @Valid en AuthController)
       const loggedUser = await login(validation.data);
-      toast.success(
-        `¡Bienvenido, ${loggedUser.email}!`,
-        `Has iniciado sesión con rol ${loggedUser.role} (Cookie jwt_token activa).`
-      );
+      // rerender-defer-reads: Invocar acciones de toast directamente desde getState()
+      useToastStore
+        .getState()
+        .success(
+          `¡Bienvenido, ${loggedUser.email}!`,
+          `Has iniciado sesión con rol ${loggedUser.role} (Cookie jwt_token activa).`
+        );
       navigate('/', { replace: true });
     } catch (err) {
       const parsed = parseApiError(err);
@@ -49,7 +51,7 @@ export const LoginForm: React.FC = () => {
       } else {
         setGeneralError(parsed.message);
       }
-      toast.error('Error al iniciar sesión', parsed.message);
+      useToastStore.getState().error('Error al iniciar sesión', parsed.message);
     } finally {
       setLoading(false);
     }
@@ -69,11 +71,11 @@ export const LoginForm: React.FC = () => {
 
   return (
     <>
-      {generalError && (
+      {generalError ? (
         <div className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-xs font-medium text-rose-600 dark:text-rose-400">
           {generalError}
         </div>
-      )}
+      ) : null}
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <FormInput

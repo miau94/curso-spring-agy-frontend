@@ -24,7 +24,6 @@ interface UserFormContentProps {
 const UserFormContent: React.FC<UserFormContentProps> = ({ editingUser, onClose }) => {
   const createUser = useUserStore((s) => s.createUser);
   const updateUser = useUserStore((s) => s.updateUser);
-  const toast = useToastStore();
 
   const [formData, setFormData] = useState<UserRequestDto>(() =>
     editingUser
@@ -59,13 +58,17 @@ const UserFormContent: React.FC<UserFormContentProps> = ({ editingUser, onClose 
       // 2. Envío al Backend (también validado con @Valid en UserController)
       if (editingUser) {
         const updated = await updateUser(editingUser.id, validation.data);
-        toast.success('Usuario actualizado', `Se actualizaron los datos de ${updated.email}.`);
+        useToastStore
+          .getState()
+          .success('Usuario actualizado', `Se actualizaron los datos de ${updated.email}.`);
       } else {
         const created = await createUser(validation.data);
-        toast.success(
-          'Usuario creado',
-          `Se registró a ${created.email} con rol ${created.role} (BCrypt).`
-        );
+        useToastStore
+          .getState()
+          .success(
+            'Usuario creado',
+            `Se registró a ${created.email} con rol ${created.role} (BCrypt).`
+          );
       }
       onClose();
     } catch (err) {
@@ -75,7 +78,7 @@ const UserFormContent: React.FC<UserFormContentProps> = ({ editingUser, onClose 
       } else if (parsed.message.toLowerCase().includes('email')) {
         setFieldErrors({ email: parsed.message });
       }
-      toast.error('No se pudo guardar el usuario', parsed.message);
+      useToastStore.getState().error('No se pudo guardar el usuario', parsed.message);
     } finally {
       setSubmitting(false);
     }
@@ -139,7 +142,7 @@ const UserFormContent: React.FC<UserFormContentProps> = ({ editingUser, onClose 
           disabled={submitting}
           className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold shadow-md shadow-indigo-600/20 transition-all disabled:opacity-60 cursor-pointer"
         >
-          {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+          {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
           <span>{editingUser ? 'Actualizar Usuario' : 'Crear Usuario'}</span>
         </button>
       </div>

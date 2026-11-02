@@ -1,5 +1,5 @@
 import { Plus, RefreshCw, Shield } from 'lucide-react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { EmptyState } from '../components/ui/EmptyState';
 import { LoadingState } from '../components/ui/LoadingState';
@@ -13,19 +13,20 @@ import { useUserStore } from '../store/useUserStore';
 import type { UserDto } from '../types/api';
 
 export const UsersPage: React.FC = () => {
-  const currentUser = useAuthStore((s) => s.user);
-  const toast = useToastStore();
+  // rerender-derived-state: Suscribirse solo al ID primitivo del usuario actual
+  const currentUserId = useAuthStore((s) => s.user?.id);
 
-  const {
-    users,
-    loading,
-    searchEmail,
-    roleFilter,
-    setSearchEmail,
-    setRoleFilter,
-    fetchUsers,
-    deleteUser,
-  } = useUserStore();
+  const users = useUserStore((s) => s.users);
+  const loading = useUserStore((s) => s.loading);
+  const searchEmail = useUserStore((s) => s.searchEmail);
+  const roleFilter = useUserStore((s) => s.roleFilter);
+  const setSearchEmail = useUserStore((s) => s.setSearchEmail);
+  const setRoleFilter = useUserStore((s) => s.setRoleFilter);
+  const fetchUsers = useUserStore((s) => s.fetchUsers);
+  const deleteUser = useUserStore((s) => s.deleteUser);
+
+  // rerender-use-deferred-value: Diferir búsqueda de email para fluidez del input
+  const deferredSearchEmail = useDeferredValue(searchEmail);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserDto | null>(null);
@@ -35,38 +36,41 @@ export const UsersPage: React.FC = () => {
   useEffect(() => {
     fetchUsers().catch((err) => {
       const parsed = parseApiError(err);
-      toast.error('Error al cargar usuarios', parsed.message);
+      useToastStore.getState().error('Error al cargar usuarios', parsed.message);
     });
-  }, [fetchUsers, toast]);
+  }, [fetchUsers]);
 
   const filteredUsers = useMemo(() => {
+    const q = deferredSearchEmail.trim().toLowerCase();
     return users.filter((u) => {
-      const matchesEmail = u.email.toLowerCase().includes(searchEmail.trim().toLowerCase());
+      const matchesEmail = !q || u.email.toLowerCase().includes(q);
       const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
       return matchesEmail && matchesRole;
     });
-  }, [users, searchEmail, roleFilter]);
+  }, [users, deferredSearchEmail, roleFilter]);
 
-  const handleOpenCreate = () => {
+  const handleOpenCreate = useCallback(() => {
     setEditingUser(null);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleOpenEdit = (targetUser: UserDto) => {
+  const handleOpenEdit = useCallback((targetUser: UserDto) => {
     setEditingUser(targetUser);
     setIsModalOpen(true);
-  };
+  }, []);
 
   const handleConfirmDelete = async () => {
     if (!userToDelete) return;
     setDeleting(true);
     try {
       await deleteUser(userToDelete.id);
-      toast.success('Usuario eliminado', `El usuario ${userToDelete.email} ha sido eliminado.`);
+      useToastStore
+        .getState()
+        .success('Usuario eliminado', `El usuario ${userToDelete.email} ha sido eliminado.`);
       setUserToDelete(null);
     } catch (err) {
       const parsed = parseApiError(err);
-      toast.error('Error al eliminar usuario', parsed.message);
+      useToastStore.getState().error('Error al eliminar usuario', parsed.message);
     } finally {
       setDeleting(false);
     }
@@ -132,7 +136,7 @@ export const UsersPage: React.FC = () => {
       ) : (
         <UserTable
           users={filteredUsers}
-          currentUserId={currentUser?.id}
+          currentUserId={currentUserId}
           onEdit={handleOpenEdit}
           onDelete={setUserToDelete}
         />

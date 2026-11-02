@@ -11,7 +11,6 @@ import { FormInput } from '../ui/FormInput';
 
 export const RegisterForm: React.FC = () => {
   const register = useAuthStore((s) => s.register);
-  const toast = useToastStore();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -41,10 +40,12 @@ export const RegisterForm: React.FC = () => {
         email: validation.data.email,
         password: validation.data.password,
       });
-      toast.success(
-        '¡Cuenta creada con éxito!',
-        `Registrado como ${createdUser.email} con rol ${createdUser.role}.`
-      );
+      useToastStore
+        .getState()
+        .success(
+          '¡Cuenta creada con éxito!',
+          `Registrado como ${createdUser.email} con rol ${createdUser.role}.`
+        );
       navigate('/', { replace: true });
     } catch (err) {
       const parsed = parseApiError(err);
@@ -53,7 +54,7 @@ export const RegisterForm: React.FC = () => {
       } else {
         setGeneralError(parsed.message);
       }
-      toast.error('No se pudo completar el registro', parsed.message);
+      useToastStore.getState().error('No se pudo completar el registro', parsed.message);
     } finally {
       setLoading(false);
     }
@@ -61,11 +62,11 @@ export const RegisterForm: React.FC = () => {
 
   return (
     <>
-      {generalError && (
+      {generalError ? (
         <div className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-xs font-medium text-rose-600 dark:text-rose-400">
           {generalError}
         </div>
-      )}
+      ) : null}
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <FormInput

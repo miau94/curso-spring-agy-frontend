@@ -39,6 +39,8 @@ export const useThemeStore = create<ThemeState>()(
     }),
     {
       name: 'springcrm_theme',
+      version: 1,
+      partialize: (state) => ({ theme: state.theme }),
       onRehydrateStorage: () => (state) => {
         if (state) {
           applyDomTheme(state.theme);

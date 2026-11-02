@@ -1,5 +1,5 @@
 import { Lock, Plus, RefreshCw, Users } from 'lucide-react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { CustomerCardGrid } from '../components/customers/CustomerCardGrid';
 import { CustomerDetailModal } from '../components/customers/CustomerDetailModal';
 import { CustomerFormModal } from '../components/customers/CustomerFormModal';
@@ -19,22 +19,23 @@ import type { CustomerDto } from '../types/api';
 const PAGE_SIZE = 6;
 
 export const CustomersPage: React.FC = () => {
-  const user = useAuthStore((s) => s.user);
-  const isAdmin = user?.role === 'ADMIN';
-  const toast = useToastStore();
+  // rerender-derived-state: Suscribirse al booleano primitivo derivado
+  const isAdmin = useAuthStore((s) => s.user?.role === 'ADMIN');
 
-  const {
-    customers,
-    loading,
-    searchQuery,
-    viewMode,
-    currentPage,
-    setSearchQuery,
-    setViewMode,
-    setCurrentPage,
-    fetchCustomers,
-    deleteCustomer,
-  } = useCustomerStore();
+  // Selectores individuales de Zustand
+  const customers = useCustomerStore((s) => s.customers);
+  const loading = useCustomerStore((s) => s.loading);
+  const searchQuery = useCustomerStore((s) => s.searchQuery);
+  const viewMode = useCustomerStore((s) => s.viewMode);
+  const currentPage = useCustomerStore((s) => s.currentPage);
+  const setSearchQuery = useCustomerStore((s) => s.setSearchQuery);
+  const setViewMode = useCustomerStore((s) => s.setViewMode);
+  const setCurrentPage = useCustomerStore((s) => s.setCurrentPage);
+  const fetchCustomers = useCustomerStore((s) => s.fetchCustomers);
+  const deleteCustomer = useCustomerStore((s) => s.deleteCustomer);
+
+  // rerender-use-deferred-value: Diferir el filtrado pesado para mantener el input a 60fps
+  const deferredSearchQuery = useDeferredValue(searchQuery);
 
   // Modal Crear / Editar
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -52,12 +53,12 @@ export const CustomersPage: React.FC = () => {
   useEffect(() => {
     fetchCustomers().catch((err) => {
       const parsed = parseApiError(err);
-      toast.error('Error al cargar clientes', parsed.message);
+      useToastStore.getState().error('Error al cargar clientes', parsed.message);
     });
-  }, [fetchCustomers, toast]);
+  }, [fetchCustomers]);
 
   const filteredCustomers = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+    const q = deferredSearchQuery.trim().toLowerCase();
     if (!q) return customers;
     return customers.filter(
       (c) =>
@@ -67,7 +68,7 @@ export const CustomersPage: React.FC = () => {
         (c.phone && c.phone.toLowerCase().includes(q)) ||
         (c.address && c.address.toLowerCase().includes(q))
     );
-  }, [customers, searchQuery]);
+  }, [customers, deferredSearchQuery]);
 
   const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / PAGE_SIZE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -76,19 +77,22 @@ export const CustomersPage: React.FC = () => {
     return filteredCustomers.slice(start, start + PAGE_SIZE);
   }, [filteredCustomers, safeCurrentPage]);
 
-  const handleOpenCreate = () => {
+  const handleOpenCreate = useCallback(() => {
     if (!isAdmin) return;
     setEditingCustomer(null);
     setIsFormOpen(true);
-  };
+  }, [isAdmin]);
 
-  const handleOpenEdit = (customer: CustomerDto) => {
-    if (!isAdmin) return;
-    setEditingCustomer(customer);
-    setIsFormOpen(true);
-  };
+  const handleOpenEdit = useCallback(
+    (customer: CustomerDto) => {
+      if (!isAdmin) return;
+      setEditingCustomer(customer);
+      setIsFormOpen(true);
+    },
+    [isAdmin]
+  );
 
-  const handleOpenDetail = async (id?: number) => {
+  const handleOpenDetail = useCallback(async (id?: number) => {
     if (!id) return;
     setIsDetailOpen(true);
     setLoadingDetail(true);
@@ -97,26 +101,28 @@ export const CustomersPage: React.FC = () => {
       setDetailCustomer(fresh);
     } catch (err) {
       const parsed = parseApiError(err);
-      toast.error('No se pudo cargar el detalle del cliente', parsed.message);
+      useToastStore.getState().error('No se pudo cargar el detalle del cliente', parsed.message);
       setIsDetailOpen(false);
     } finally {
       setLoadingDetail(false);
     }
-  };
+  }, []);
 
   const handleConfirmDelete = async () => {
     if (!customerToDelete?.id) return;
     setDeleting(true);
     try {
       await deleteCustomer(customerToDelete.id);
-      toast.success(
-        'Cliente eliminado',
-        `Se eliminó a ${customerToDelete.firstName} ${customerToDelete.lastName}.`
-      );
+      useToastStore
+        .getState()
+        .success(
+          'Cliente eliminado',
+          `Se eliminó a ${customerToDelete.firstName} ${customerToDelete.lastName}.`
+        );
       setCustomerToDelete(null);
     } catch (err) {
       const parsed = parseApiError(err);
-      toast.error('Error al eliminar cliente', parsed.message);
+      useToastStore.getState().error('Error al eliminar cliente', parsed.message);
     } finally {
       setDeleting(false);
     }
@@ -199,7 +205,7 @@ export const CustomersPage: React.FC = () => {
         <CustomerTable
           customers={paginatedCustomers}
           isAdmin={isAdmin}
-          onViewDetail={(id) => void handleOpenDetail(id)}
+          onViewDetail={handleOpenDetail}
           onEdit={handleOpenEdit}
           onDelete={setCustomerToDelete}
         />
@@ -207,7 +213,7 @@ export const CustomersPage: React.FC = () => {
         <CustomerCardGrid
           customers={paginatedCustomers}
           isAdmin={isAdmin}
-          onViewDetail={(id) => void handleOpenDetail(id)}
+          onViewDetail={handleOpenDetail}
           onEdit={handleOpenEdit}
           onDelete={setCustomerToDelete}
         />

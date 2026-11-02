@@ -54,12 +54,16 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'springcrm_user',
+      version: 1,
+      partialize: (state) => ({ user: state.user }),
     }
   )
 );
 
-// Escucha global del evento 401 emitido por el interceptor de Axios
-if (typeof window !== 'undefined') {
+// Deduplicación de listener global (client-event-listeners / advanced-init-once)
+let authListenerInitialized = false;
+if (typeof window !== 'undefined' && !authListenerInitialized) {
+  authListenerInitialized = true;
   window.addEventListener(AUTH_UNAUTHORIZED_EVENT, () => {
     const { user, clearSession } = useAuthStore.getState();
     if (user) {

@@ -26,7 +26,6 @@ const CustomerFormContent: React.FC<CustomerFormContentProps> = ({
 }) => {
   const createCustomer = useCustomerStore((s) => s.createCustomer);
   const updateCustomer = useCustomerStore((s) => s.updateCustomer);
-  const toast = useToastStore();
 
   const [formData, setFormData] = useState<CustomerDto>(() =>
     editingCustomer
@@ -72,16 +71,20 @@ const CustomerFormContent: React.FC<CustomerFormContentProps> = ({
       // 2. Envío al Backend (también validado con @Valid en CustomerController)
       if (editingCustomer?.id) {
         const updated = await updateCustomer(editingCustomer.id, payload);
-        toast.success(
-          'Cliente actualizado',
-          `${updated.firstName} ${updated.lastName} se ha actualizado correctamente.`
-        );
+        useToastStore
+          .getState()
+          .success(
+            'Cliente actualizado',
+            `${updated.firstName} ${updated.lastName} se ha actualizado correctamente.`
+          );
       } else {
         const created = await createCustomer(payload);
-        toast.success(
-          'Cliente creado',
-          `${created.firstName} ${created.lastName} fue añadido al directorio.`
-        );
+        useToastStore
+          .getState()
+          .success(
+            'Cliente creado',
+            `${created.firstName} ${created.lastName} fue añadido al directorio.`
+          );
       }
       onClose();
     } catch (err) {
@@ -91,7 +94,7 @@ const CustomerFormContent: React.FC<CustomerFormContentProps> = ({
       } else if (parsed.message.toLowerCase().includes('email')) {
         setFieldErrors({ email: parsed.message });
       }
-      toast.error('Error al guardar el cliente', parsed.message);
+      useToastStore.getState().error('Error al guardar el cliente', parsed.message);
     } finally {
       setSubmitting(false);
     }
@@ -175,7 +178,7 @@ const CustomerFormContent: React.FC<CustomerFormContentProps> = ({
           disabled={submitting}
           className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold shadow-md shadow-indigo-600/20 transition-all disabled:opacity-60 cursor-pointer"
         >
-          {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+          {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
           <span>{editingCustomer ? 'Guardar Cambios' : 'Crear Cliente'}</span>
         </button>
       </div>

@@ -17,6 +17,9 @@ interface CustomerState {
   deleteCustomer: (id: number) => Promise<void>;
 }
 
+// Deduplicación de peticiones concurrentes (client-swr-dedup)
+let inflightCustomersPromise: Promise<CustomerDto[]> | null = null;
+
 export const useCustomerStore = create<CustomerState>((set) => ({
   customers: [],
   loading: false,
@@ -29,14 +32,23 @@ export const useCustomerStore = create<CustomerState>((set) => ({
   setCurrentPage: (currentPage) => set({ currentPage }),
 
   fetchCustomers: async () => {
-    set({ loading: true });
-    try {
-      const data = await customerService.getAll();
-      set({ customers: data });
-      return data;
-    } finally {
-      set({ loading: false });
+    if (inflightCustomersPromise) {
+      return inflightCustomersPromise;
     }
+
+    set({ loading: true });
+    inflightCustomersPromise = customerService
+      .getAll()
+      .then((data) => {
+        set({ customers: data });
+        return data;
+      })
+      .finally(() => {
+        inflightCustomersPromise = null;
+        set({ loading: false });
+      });
+
+    return inflightCustomersPromise;
   },
 
   createCustomer: async (payload) => {
