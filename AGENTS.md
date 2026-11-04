@@ -1,43 +1,46 @@
 # AGENTS.md - Resumen del Proyecto `4-react-app`
 
 ## 1. Descripción General
-Aplicación frontend **Single Page Application (SPA)** construida con **React 19, TypeScript y Tailwind CSS v4** para consumir la API RESTful de `3-spring-api`. Implementa gestión de estado global con **Zustand**, validación en doble capa con **Zod + Spring Boot `@Valid`**, autenticación mediante **cookies `HttpOnly` (`jwt_token`)** y control de acceso basado en roles (**RBAC**: `USER` y `ADMIN`).
+Aplicación frontend **Single Page Application (SPA)** construida con **React 19, TypeScript y Tailwind CSS v4** para consumir la API RESTful de `3-spring-api`. Implementa gestión de estado global con **Zustand**, validación en doble capa con **Zod + Spring Boot `@Valid`**, autenticación mediante **cookies `HttpOnly` (`jwt_token`)** y control de acceso basado en roles (**RBAC**: `USER` y `ADMIN`) para los módulos de Clientes, Facturación y Usuarios.
 
 ## 2. Stack Tecnológico y Configuración
 - **Runtime / Bundler**: Node.js + **Vite 8** (`@vitejs/plugin-react`)
 - **Lenguaje y Framework UI**: **React 19.3** + **TypeScript 7**
 - **Estilos e Iconografía**: **Tailwind CSS v4** (`@tailwindcss/vite`) con soporte **Dark / Light Mode** (`.dark`) + `lucide-react`
-- **Enrutamiento**: `react-router-dom` (rutas públicas, protegidas y exclusivas `ADMIN`)
+- **Enrutamiento**: `react-router-dom` (rutas públicas, protegidas con permisos granulares y exclusivas `ADMIN`)
 - **Estado Global (Store)**: **Zustand** (`zustand` + middleware `persist`)
 - **Validación de Formularios**: **Zod** (`zod`) sincronizado con las reglas Jakarta Validation del backend
 - **Cliente HTTP**: **Axios** (`withCredentials: true`) + Proxy de desarrollo en `vite.config.ts` (`/api` y `/actuator` -> `http://localhost:8080`)
 
 ## 3. Estructura de Directorios (`src/`)
-- **`types/`**: Contratos TypeScript espejo del backend (`api.ts`: `Role`, `UserDto`, `UserRequestDto`, `AuthRequestDto`, `CustomerDto`, `ErrorResponse`, `FieldErrors`).
-- **`schemas/`**: Esquemas declarativos de **Zod** y utilidades de mapeo (`authSchema.ts`, `customerSchema.ts`, `userSchema.ts`, `zodUtils.ts`).
-- **`services/`**: Capa de comunicación HTTP con Axios (`apiClient.ts` con interceptor `401` y parser de errores `@Valid`, `authService.ts`, `customerService.ts`, `userService.ts`, `actuatorService.ts`).
+- **`types/`**: Contratos TypeScript espejo del backend (`api.ts`: `Role`, `UserDto`, `UserRequestDto`, `AuthRequestDto`, `CustomerDto`, `InvoiceStatus`, `InvoiceItemDto`, `InvoiceDto`, `ErrorResponse`, `FieldErrors`).
+- **`schemas/`**: Esquemas declarativos de **Zod** y utilidades de mapeo (`authSchema.ts`, `customerSchema.ts`, `invoiceSchema.ts`, `userSchema.ts`, `zodUtils.ts`).
+- **`services/`**: Capa de comunicación HTTP con Axios (`apiClient.ts` con interceptor `401` y parser de errores `@Valid`, `authService.ts`, `customerService.ts`, `invoiceService.ts`, `userService.ts`, `actuatorService.ts`).
 - **`store/`**: Stores reactivos de **Zustand**:
   - `useAuthStore.ts`: Sesión del usuario (`UserDto`) persistida en `localStorage` y auto-limpieza ante eventos `401 Unauthorized`.
   - `useCustomerStore.ts`: Estado CRUD, búsqueda, paginación y modo de vista (`table` | `cards`) de clientes.
+  - `useInvoiceStore.ts`: Estado CRUD, búsqueda por texto, filtro por estado (`ALL` | `PAID` | `PENDING` | `OVERDUE` | `CANCELLED`), filtro por cliente (`customerFilter`) y paginación de facturas.
   - `useUserStore.ts`: Estado CRUD, búsqueda por email y filtro por rol (`ALL` | `ADMIN` | `USER`) de usuarios.
   - `useThemeStore.ts`: Estado persistido del tema (`light` | `dark`) sincronizado con `document.documentElement`.
   - `useToastStore.ts`: Cola global de notificaciones flotantes (`success`, `error`, `warning`, `info`).
 - **`components/`**: Arquitectura modular de componentes pequeños de responsabilidad única:
   - `ui/`: `FormInput`, `Modal`, `ConfirmDialog`, `PaginationBar`, `RoleBadge`, `EmptyState`, `LoadingState`, `ToastContainer`.
-  - `layout/`: `AppLayout`, `SidebarNav` (muestra candado en `/users` para rol `USER`), `Topbar`.
+  - `layout/`: `AppLayout`, `SidebarNav` (accesos a Resumen, Clientes `CRM`, Facturas `ERP` y Usuarios `ADMIN`), `Topbar`.
   - `auth/`: `ProtectedRoute`, `AdminRoute`, `LoginForm`, `RegisterForm`, `DemoAccessButtons`.
   - `dashboard/`: `StatCard`, `RecentCustomersList`, `RbacMatrixCard`.
-  - `customers/`: `CustomerToolbar`, `CustomerTable`, `CustomerTableRow`, `CustomerCardGrid`, `CustomerCard`, `CustomerFormModal`, `CustomerDetailModal`.
+  - `customers/`: `CustomerToolbar`, `CustomerTable`, `CustomerTableRow`, `CustomerCardGrid`, `CustomerCard`, `CustomerFormModal`, `CustomerDetailModal` (incluye listado de facturas asociadas al cliente y enlace a `/invoices?customerId={id}`).
+  - `invoices/`: `InvoiceStatusBadge`, `InvoiceDetailModal` (desglose de líneas, subtotales e importe total), `InvoiceFormModal` (editor dinámico de líneas de factura validado con Zod).
   - `users/`: `UserToolbar`, `UserTable`, `UserTableRow` (protección anti auto-eliminación del `ADMIN` activo), `RoleSelectorCards`, `UserFormModal`.
-- **`pages/`**: Vistas principales ensambladoras (`LoginPage`, `RegisterPage`, `DashboardPage`, `CustomersPage`, `UsersPage`).
+- **`pages/`**: Vistas principales ensambladoras (`LoginPage`, `RegisterPage`, `DashboardPage`, `CustomersPage`, `InvoicesPage`, `UsersPage`).
 
 ## 4. Rutas y Control de Acceso (RBAC)
 | Ruta | Acceso | Componentes Principales | Endpoints Consumidos |
 | :--- | :--- | :--- | :--- |
 | `/login` | Público | `LoginPage`, `LoginForm`, `DemoAccessButtons` | `POST /api/auth/login` |
 | `/register` | Público | `RegisterPage`, `RegisterForm` | `POST /api/auth/register` |
-| `/` | `USER`, `ADMIN` | `DashboardPage`, `StatCard`, `RecentCustomersList` | `GET /actuator/health`, `GET /api/customers`, `GET /api/users` |
-| `/customers` | `USER` (lectura), `ADMIN` (CRUD) | `CustomersPage`, `CustomerTable`, `CustomerCardGrid`, `CustomerFormModal` | `GET`, `POST`, `PUT`, `DELETE /api/customers/**` |
+| `/` | `USER`, `ADMIN` | `DashboardPage`, `StatCard`, `RecentCustomersList`, `RbacMatrixCard` | `GET /actuator/health`, `GET /api/customers`, `GET /api/invoices`, `GET /api/users` |
+| `/customers` | `USER` (lectura), `ADMIN` (CRUD) | `CustomersPage`, `CustomerTable`, `CustomerCardGrid`, `CustomerFormModal`, `CustomerDetailModal` | `GET`, `POST`, `PUT`, `DELETE /api/customers/**` y `GET /api/customers/{id}/invoices` |
+| `/invoices` | `USER` (lectura), `ADMIN` (CRUD) | `InvoicesPage`, `InvoiceDetailModal`, `InvoiceFormModal`, `InvoiceStatusBadge` | `GET`, `POST`, `PUT`, `DELETE /api/invoices/**` |
 | `/users` | Exclusivo `ADMIN` | `UsersPage`, `UserTable`, `UserFormModal`, `RoleSelectorCards` | `GET`, `POST`, `PUT`, `DELETE /api/users/**` |
 
 ## 5. Skills Disponibles (`.agents/skills/`) y Casos de Uso
