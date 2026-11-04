@@ -13,6 +13,7 @@ interface TopbarProps {
 const routeTitles: Record<string, { section: string; endpoint: string }> = {
   '/': { section: 'Consola de operaciones', endpoint: '/actuator/health' },
   '/customers': { section: 'Directorio de clientes', endpoint: '/api/customers' },
+  '/invoices': { section: 'Gestión de facturación', endpoint: '/api/invoices' },
   '/users': { section: 'Control de accesos y usuarios', endpoint: '/api/users' },
 };
 

@@ -19,6 +19,9 @@ const DashboardPage = lazy(() =>
 const CustomersPage = lazy(() =>
   import('./pages/CustomersPage').then((m) => ({ default: m.CustomersPage }))
 );
+const InvoicesPage = lazy(() =>
+  import('./pages/InvoicesPage').then((m) => ({ default: m.InvoicesPage }))
+);
 const UsersPage = lazy(() =>
   import('./pages/UsersPage').then((m) => ({ default: m.UsersPage }))
 );
@@ -44,6 +47,7 @@ export const App: React.FC = () => {
             <Route element={<AppLayout />}>
               <Route path="/" element={<DashboardPage />} />
               <Route path="/customers" element={<CustomersPage />} />
+              <Route path="/invoices" element={<InvoicesPage />} />
 
               {/* Ruta exclusiva ADMIN */}
               <Route element={<AdminRoute />}>

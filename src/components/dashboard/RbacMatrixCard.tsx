@@ -18,6 +18,16 @@ export const RbacMatrixCard: React.FC<RbacMatrixCardProps> = ({ isAdmin }) => {
       allowed: isAdmin,
     },
     {
+      endpoint: 'GET /api/invoices/**',
+      description: 'Consulta de facturas y desglose de líneas por cliente',
+      allowed: true,
+    },
+    {
+      endpoint: 'POST · PUT · DELETE /api/invoices',
+      description: 'Emisión, modificación y eliminación de facturas',
+      allowed: isAdmin,
+    },
+    {
       endpoint: 'ALL /api/users/**',
       description: 'Gestión de usuarios, roles y contraseñas BCrypt',
       allowed: isAdmin,

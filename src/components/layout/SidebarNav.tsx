@@ -1,4 +1,4 @@
-import { LayoutDashboard, Lock, Shield, Users } from 'lucide-react';
+import { LayoutDashboard, Lock, Receipt, Shield, Users } from 'lucide-react';
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -45,6 +45,23 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
             <span>Clientes</span>
             <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-[.bg-indigo-600]:bg-white/20 group-[.bg-indigo-600]:text-white">
               CRM
+            </span>
+          </div>
+        ) : null}
+      </NavLink>
+
+      <NavLink
+        to="/invoices"
+        onClick={onItemClick}
+        className={navLinkClasses}
+        title="Gestión de facturación"
+      >
+        <Receipt className="w-4 h-4 shrink-0" />
+        {showLabels ? (
+          <div className="flex items-center justify-between flex-1">
+            <span>Facturas</span>
+            <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-[.bg-indigo-600]:bg-white/20 group-[.bg-indigo-600]:text-white">
+              ERP
             </span>
           </div>
         ) : null}

@@ -1,7 +1,7 @@
 import {
   Activity,
-  CheckCircle2,
   Lock,
+  Receipt,
   RefreshCw,
   Shield,
   Users,
@@ -15,6 +15,7 @@ import { RoleBadge } from '../components/ui/RoleBadge';
 import { actuatorService } from '../services/actuatorService';
 import { useAuthStore } from '../store/useAuthStore';
 import { useCustomerStore } from '../store/useCustomerStore';
+import { useInvoiceStore } from '../store/useInvoiceStore';
 import { useUserStore } from '../store/useUserStore';
 
 export const DashboardPage: React.FC = () => {
@@ -25,6 +26,10 @@ export const DashboardPage: React.FC = () => {
   const loadingCustomers = useCustomerStore((s) => s.loading);
   const fetchCustomers = useCustomerStore((s) => s.fetchCustomers);
 
+  const invoices = useInvoiceStore((s) => s.invoices);
+  const loadingInvoices = useInvoiceStore((s) => s.loading);
+  const fetchInvoices = useInvoiceStore((s) => s.fetchInvoices);
+
   const users = useUserStore((s) => s.users);
   const fetchUsers = useUserStore((s) => s.fetchUsers);
 
@@ -34,6 +39,7 @@ export const DashboardPage: React.FC = () => {
   const runFetchMetrics = useCallback(async () => {
     const promises: Promise<unknown>[] = [
       fetchCustomers(),
+      fetchInvoices(),
       actuatorService
         .getHealth()
         .then((res) => setHealthStatus(res.status === 'UP' ? 'UP' : 'DOWN'))
@@ -45,7 +51,7 @@ export const DashboardPage: React.FC = () => {
     }
 
     await Promise.allSettled(promises);
-  }, [fetchCustomers, fetchUsers, isAdmin]);
+  }, [fetchCustomers, fetchInvoices, fetchUsers, isAdmin]);
 
   useEffect(() => {
     let active = true;
@@ -154,14 +160,19 @@ export const DashboardPage: React.FC = () => {
         </StatCard>
 
         <StatCard
-          title="Nivel de autorización"
-          icon={<CheckCircle2 className="w-4 h-4" />}
+          title="Facturas emitidas"
+          icon={<Receipt className="w-4 h-4" />}
           iconContainerClass="bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
         >
-          <div className="mt-1">{user ? <RoleBadge role={user.role} size="md" /> : null}</div>
-          <p className="mt-2.5 text-xs text-slate-500 dark:text-slate-400 truncate">
-            {isAdmin ? 'Lectura y escritura habilitadas' : 'Acceso en modo lectura'}
+          <p className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white tabular-nums">
+            {loadingInvoices ? '—' : invoices.length}
           </p>
+          <Link
+            to="/invoices"
+            className="mt-2 inline-block text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+          >
+            {isAdmin ? 'Administrar facturación' : 'Ver facturas de clientes'}
+          </Link>
         </StatCard>
 
         <StatCard

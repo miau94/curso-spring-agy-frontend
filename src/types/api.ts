@@ -26,6 +26,26 @@ export interface CustomerDto {
   address?: string;
 }
 
+export type InvoiceStatus = 'PENDING' | 'PAID' | 'CANCELLED' | 'OVERDUE';
+
+export interface InvoiceItemDto {
+  id?: number;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal?: number;
+}
+
+export interface InvoiceDto {
+  id?: number;
+  customerId: number;
+  customerName?: string;
+  description: string;
+  amount?: number;
+  status: InvoiceStatus;
+  items: InvoiceItemDto[];
+}
+
 export interface ErrorResponse {
   status: number;
   error: string;
