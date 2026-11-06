@@ -10,9 +10,18 @@ Aplicación frontend **Single Page Application (SPA)** construida con **React 19
 - **Enrutamiento**: `react-router-dom` (rutas públicas, protegidas con permisos granulares y exclusivas `ADMIN`)
 - **Estado Global (Store)**: **Zustand** (`zustand` + middleware `persist`)
 - **Validación de Formularios**: **Zod** (`zod`) sincronizado con las reglas Jakarta Validation del backend
-- **Cliente HTTP**: **Axios** (`withCredentials: true`) + Proxy de desarrollo en `vite.config.ts` (`/api` y `/actuator` -> `http://localhost:8080`)
+- **Cliente HTTP**: **Axios** (`withCredentials: true`) + Proxy de desarrollo en `vite.config.ts` (`/api` y `/actuator` -> `${VITE_BACKEND_URL}`)
+- **Variables de Entorno (`.env`)**:
+  - `VITE_BACKEND_URL`: URL base del backend para el proxy de desarrollo Vite (`http://localhost:8080`).
+  - `VITE_API_BASE_URL`: URL base global de Axios (por defecto vacía para usar el proxy local o mismo dominio).
+  - `VITE_AUTH_BASE_URL`: Prefijo para endpoints de autenticación (`/api/auth`).
+  - `VITE_CUSTOMERS_BASE_URL`: Prefijo para endpoints de clientes (`/api/customers`).
+  - `VITE_INVOICES_BASE_URL`: Prefijo para endpoints de facturación (`/api/invoices`).
+  - `VITE_USERS_BASE_URL`: Prefijo para endpoints de usuarios (`/api/users`).
+  - `VITE_ACTUATOR_BASE_URL`: Prefijo para endpoints de salud y Actuator (`/actuator`).
 
 ## 3. Estructura de Directorios (`src/`)
+- **`config/`**: Configuración centralizada de rutas base de endpoints consumiendo `import.meta.env` (`apiConfig.ts`).
 - **`types/`**: Contratos TypeScript espejo del backend (`api.ts`: `Role`, `UserDto`, `UserRequestDto`, `AuthRequestDto`, `CustomerDto`, `InvoiceStatus`, `InvoiceItemDto`, `InvoiceDto`, `ErrorResponse`, `FieldErrors`).
 - **`schemas/`**: Esquemas declarativos de **Zod** y utilidades de mapeo (`authSchema.ts`, `customerSchema.ts`, `invoiceSchema.ts`, `userSchema.ts`, `zodUtils.ts`).
 - **`services/`**: Capa de comunicación HTTP con Axios (`apiClient.ts` con interceptor `401` y parser de errores `@Valid`, `authService.ts`, `customerService.ts`, `invoiceService.ts`, `userService.ts`, `actuatorService.ts`).

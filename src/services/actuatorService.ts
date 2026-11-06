@@ -1,3 +1,4 @@
+import { API_CONFIG } from '../config/apiConfig';
 import { apiClient } from './apiClient';
 
 export interface ActuatorHealthResponse {
@@ -6,7 +7,7 @@ export interface ActuatorHealthResponse {
 
 export const actuatorService = {
   async getHealth(): Promise<ActuatorHealthResponse> {
-    const response = await apiClient.get<ActuatorHealthResponse>('/actuator/health');
+    const response = await apiClient.get<ActuatorHealthResponse>(`${API_CONFIG.ACTUATOR}/health`);
     return response.data;
   },
 };

@@ -1,10 +1,11 @@
 import axios, { AxiosError } from 'axios';
+import { API_CONFIG } from '../config/apiConfig';
 import type { ErrorResponse, FieldErrors, ParsedApiError } from '../types/api';
 
 export const AUTH_UNAUTHORIZED_EVENT = 'auth:unauthorized';
 
 export const apiClient = axios.create({
-  baseURL: '',
+  baseURL: API_CONFIG.BASE_URL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -83,7 +84,9 @@ apiClient.interceptors.response.use(
     const requestUrl = error.config?.url ?? '';
 
     // Si el backend responde 401 en una ruta protegida, limpiamos la sesión local
-    if (status === 401 && !requestUrl.includes('/api/auth/login') && !requestUrl.includes('/api/auth/register')) {
+    const loginPath = `${API_CONFIG.AUTH}/login`;
+    const registerPath = `${API_CONFIG.AUTH}/register`;
+    if (status === 401 && !requestUrl.includes(loginPath) && !requestUrl.includes(registerPath)) {
       window.dispatchEvent(new CustomEvent(AUTH_UNAUTHORIZED_EVENT));
     }
 
